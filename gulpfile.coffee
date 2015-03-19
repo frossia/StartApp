@@ -8,6 +8,8 @@ $ = require('gulp-load-plugins')()
 
 browserSync = require('browser-sync')
 
+include = require('gulp-include')
+
 reload = browserSync.reload
 
 
@@ -74,8 +76,10 @@ gulp.task 'clean', require('del').bind(null, [
 ])
 
 gulp.task 'slim', ->
-  gulp.src('./app/slim/*.slim')
-    .pipe($.slim(pretty: true))
+  gulp.src('./app/slim/index.slim')
+    .pipe(include())
+    .pipe($.slim(pretty: true, options: "attr_list_delims={'(' => ')', '[' => ']'}")
+      .on('error', console.error.bind(console, 'SLIM error:')))
     .pipe(gulp.dest('./app/'))
     .pipe reload(stream: true)
   return
@@ -86,10 +90,12 @@ gulp.task 'coffee', ->
     .pipe($.coffee(bare: true).on('error', console.error.bind(console, 'COFFEE error:')))
     .pipe($.sourcemaps.write())
     .pipe gulp.dest('app/scripts')
+    .pipe reload(stream: true)
   return
 
 gulp.task 's', [
   'slim'
+  'coffee'
   'styles'
   'fonts'
 ], ->
@@ -110,6 +116,7 @@ gulp.task 's', [
     'app/images/**/*'
     '.tmp/fonts/**/*'
   ]).on 'change', reload
+  gulp.watch 'app/scripts/coffee/**/*.coffee', [ 'coffee' ]
   gulp.watch 'app/slim/**/*.slim', [ 'slim' ]
   gulp.watch 'app/styles/**/*.sass', [ 'styles' ]
   gulp.watch 'app/fonts/**/*', [ 'fonts' ]
